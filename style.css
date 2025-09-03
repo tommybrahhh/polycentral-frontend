@@ -1,0 +1,183 @@
+/* ===== 1. RESET & TOKENS ===== */
+:root{
+  /* Dark base */
+  --bg: #0a0a0a;
+  --surface: rgba(20,20,20,0.55);
+  --border: rgba(255,255,255,.08);
+
+  /* Accent palette */
+  --orange: #ff6600;
+  --green: #00e676;
+
+  /* Aero / glow */
+  --glass: rgba(255,255,255,.04);
+  --blur: 12px;
+  --glow: 0 0 12px var(--orange);
+
+  /* Typography */
+  --font: "Inter",system-ui, sans-serif;
+  --mono: "JetBrains Mono",monospace;
+
+  /* Radius & spacing */
+  --r: 12px;
+  --r-sm: 8px;
+  --space: 24px;
+  --space-sm: 12px;
+}
+
+*{
+  margin:0;padding:0;box-sizing:border-box;
+}
+body{
+  background:var(--bg);
+  color:#fff;
+  font-family:var(--font);
+  line-height:1.5;
+}
+
+/* ===== 2. HEADER ===== */
+.header{
+  position:sticky;top:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:16px var(--space);
+  background:var(--surface);
+  backdrop-filter:blur(var(--blur));
+  border-bottom:1px solid var(--border);
+}
+.logo{
+  font-weight:800;
+  font-size:22px;
+  background:linear-gradient(90deg,var(--orange),var(--green));
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.nav-link{
+  margin-left:28px;
+  color:#ccc;
+  font-weight:500;
+  text-decoration:none;
+  transition:.2s;
+}
+.nav-link:hover{color:var(--orange);}
+
+/* ===== 3. MAIN LAYOUT ===== */
+.container{max-width:1200px;margin:auto;padding:var(--space);}
+section{margin-bottom:var(--space);}
+.btn{
+  padding:14px 28px;
+  border:none;
+  border-radius:var(--r-sm);
+  font-weight:600;
+  cursor:pointer;
+  background:var(--orange);
+  color:#000;
+  box-shadow:var(--glow);
+  transition:.3s;
+}
+.btn:hover{transform:translateY(-2px);}
+
+/* ===== 4. DAILY CHALLENGE ===== */
+.daily-challenge-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:var(--space);
+  backdrop-filter:blur(var(--blur));
+  text-align:center;
+}
+.challenge-title{
+  font-size:28px;
+  font-weight:800;
+}
+.challenge-question{
+  margin:var(--space-sm) 0;
+  font-size:20px;
+}
+
+/* ===== 5. STATS DASHBOARD ===== */
+.stats-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+  gap:var(--space-sm);
+}
+.stat-item{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:var(--space-sm);
+  backdrop-filter:blur(var(--blur));
+  transition:.3s;
+}
+.stat-item:hover{border-color:var(--orange);}
+.stat-value{font-size:28px;font-weight:800;font-family:var(--mono);}
+.stat-label{font-size:14px;color:#aaa;}
+
+/* ===== 6. TOURNAMENTS ===== */
+.tournament-display-grid{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:var(--space-sm);
+}
+.main-tournament-display{
+  background:var(--surface);
+  border:2px solid var(--orange);
+  border-radius:var(--r);
+  padding:var(--space);
+  position:relative;
+  box-shadow:var(--glow);
+}
+.sub-tournaments-row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:var(--space-sm);
+}
+.sub-tournament-display{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:var(--space-sm);
+}
+@media(max-width:768px){
+  .sub-tournaments-row{grid-template-columns:1fr;}
+}
+
+/* ===== 7. LIVE RANKINGS ===== */
+.live-rankings{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:var(--space);
+  backdrop-filter:blur(var(--blur));
+}
+.ranking-item{
+  display:flex;
+  align-items:center;
+  gap:var(--space-sm);
+  padding:var(--space-sm);
+  border-bottom:1px solid var(--border);
+}
+.rank-number{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--orange);font-weight:800;
+  display:grid;place-items:center;
+}
+
+/* ===== 8. RESPONSIVE ===== */
+@media(max-width:600px){
+  .stats-grid{grid-template-columns:1fr;}
+}
+/* Aero card */
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:var(--r);
+  padding:var(--space-sm);
+  backdrop-filter:blur(var(--blur));
+  transition:.3s;
+}
+.card:hover{border-color:var(--orange);}
+
+/* Glow text */
+.text-glow{
+  text-shadow:0 0 6px var(--orange);
+}

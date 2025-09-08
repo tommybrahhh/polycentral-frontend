@@ -22,7 +22,7 @@
             --secondary: #1E1E1E;
             --secondary-foreground: #FFFFFF;
             --muted: #333333;
-            --muted-foreground: #A5A5A5;
+            --muted-foreground: #FFFFFF;
             --accent: #A5FF90;
             --accent-foreground: #000000;
             --destructive: #FF0000;
@@ -32,9 +32,9 @@
             --ring: #FF6F00;
             
             /* Updated Gaming UI Colors */
-            --neon-blue: #A5FF90;
+            --neon-blue: #FF6F00;
             --neon-orange: #FF6F00;
-            --neon-green: #A5FF90;
+            --neon-green: #FF6F00;
             --neon-purple: #FF6F00;
             --neon-pink: #FF6F00;
             --font-sans: 'Segoe UI', 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -1733,42 +1733,57 @@
 
     <div class="container">
         <!-- Daily Challenge - Compact and Enticing -->
-<!-- Daily Challenge Section -->
+<!-- Gaming Daily Challenge v3 -->
 <section class="daily-challenge-section">
-  <div class="daily-challenge-card">
-    <div class="challenge-header">
-      <div>
-        <h2 class="challenge-title">YOUR FREE DAILY CHALLENGE</h2>
-        <p class="challenge-subtitle">Predict now, earn 500 points, and climb the leaderboard!</p>
+  <div class="challenge-wrapper">
+    <div class="daily-challenge-card">
+
+      <!-- animated top bar -->
+      <div class="challenge-bar">
+        <span class="flare"></span>
+        <span class="bar-text">FREE DAILY CHALLENGE</span>
+        <span class="flare"></span>
       </div>
-    </div>
-    
-    <div class="divider"></div>
-    
-    <div class="prediction-question">
-      Will Bitcoin close above $97,000 today?
-    </div>
-    
-    <div class="streak-info">
-      <div class="streak-item">
-        <span class="streak-icon">🔥</span>
-        <span>5-Day Streak</span>
+
+      <!-- title & subtitle -->
+      <h2 class="challenge-title">PREDICT • EARN • CLIMB</h2>
+      <p class="challenge-subtitle">
+        Call today's Bitcoin close &nbsp;•&nbsp; Win <span class="coin">500</span> coins
+      </p>
+
+      <!-- prediction question (big) -->
+      <div class="prediction-question">
+        Will Bitcoin close above <strong>$97 000</strong> today ?
       </div>
-      <div class="streak-item">
-        <span class="streak-icon">+100</span>
-        <span>Bonus Tomorrow</span>
+
+      <!-- streak badges -->
+      <div class="streak-info">
+        <div class="streak-badge">
+          <span class="fire">🔥</span>
+          <span>5-Day Streak</span>
+        </div>
+        <div class="streak-badge bonus">
+          <span class="plus">+100</span>
+          <span>Bonus tomorrow</span>
+        </div>
       </div>
+
+      <!-- CLAIM BUTTON (coin style) -->
+      <button class="btn-claim-daily coin-button">
+        <span class="coin-icon">🪙</span>
+        <span class="btn-text">Claim Free 500</span>
+        <span class="coin-icon">🪙</span>
+      </button>
+
     </div>
-    
-    <button class="btn-claim-daily">Claim Free 500 Points</button>
   </div>
 </section>
 
         <!-- Performance Dashboard -->
-        <section class="stats-dashboard">
+        <section class="stats-dashboard orange-card">
             <h3 class="stats-header">Your Performance Dashboard</h3>
             <div class="stats-grid">
-                <div class="stat-item" onclick="showPointsHistory()">
+                <div class="stat-item orange-card" onclick="showPointsHistory()">
                     <div class="stat-icon points">💰</div>
                     <div class="stat-content">
                         <span class="stat-value" id="points-balance">3,347</span>
@@ -1777,7 +1792,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-item">
+                <div class="stat-item orange-card">
                     <div class="stat-icon accuracy">📊</div>
                     <div class="stat-content">
                         <span class="stat-value" id="accuracy-rate">67%</span>
@@ -1786,7 +1801,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-item" onclick="openLeaderboard()">
+                <div class="stat-item orange-card" onclick="openLeaderboard()">
                     <div class="stat-icon rank">🏆</div>
                     <div class="stat-content">
                         <span class="stat-value" id="global-rank">#46</span>
@@ -1795,7 +1810,7 @@
                     </div>
                 </div>
                 
-                <div class="stat-item">
+                <div class="stat-item orange-card">
                     <div class="stat-icon streak">🔥</div>
                     <div class="stat-content">
                         <span class="stat-value" id="current-streak">5 Days</span>
@@ -1824,7 +1839,7 @@
   
   <div class="tournament-display-grid">
     <div class="main-tournament-row">
-      <div class="main-tournament-display">
+      <div class="main-tournament-display orange-card">
         <span class="tournament-display-label label-main">Featured</span>
         
         <div class="tournament-header">
@@ -1859,7 +1874,7 @@
     </div>
     
     <div class="sub-tournaments-row">
-      <div class="sub-tournament-display hot">
+      <div class="sub-tournament-display hot orange-card">
         <span class="tournament-display-label label-hot">Hot</span>
         
         <h4 class="tournament-card-title">HOT TOURNAMENT</h4>
@@ -1879,7 +1894,7 @@
         <button class="btn-view-leaderboard">View Hot Tournaments</button>
       </div>
       
-      <div class="sub-tournament-display rising">
+      <div class="sub-tournament-display rising orange-card">
         <span class="tournament-display-label label-rising">Rising</span>
         
         <h4 class="tournament-card-title">RISING TOURNAMENT</h4>
@@ -1902,8 +1917,16 @@
   </div>
 </section>
 
+        <!-- Filter Bar -->
+        <div class="category-filter-bar">
+          <button class="category-filter-btn all active" onclick="filterTournaments('all')">All</button>
+          <button class="category-filter-btn crypto" onclick="filterTournaments('crypto')">Crypto</button>
+          <button class="category-filter-btn stocks" onclick="filterTournaments('stocks')">Stocks</button>
+          <button class="category-filter-btn politics" onclick="filterTournaments('politics')">Politics</button>
+        </div>
+
         <!-- Live Rankings Widget -->
-        <section class="live-rankings">
+        <section class="live-rankings orange-card">
             <div class="rankings-header">
                 <h3 class="rankings-title">Live Leaderboard Snapshot</h3>
                 <span class="your-rank">Your Rank: #46</span>

@@ -1,7 +1,7 @@
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3001/api' 
-    : 'https://your-app-name.up.railway.app/api';
+    : 'https://polycentral-backend.onrender.com/api';
     
 // Global State
 let currentUser = null;

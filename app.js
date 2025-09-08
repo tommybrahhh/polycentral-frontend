@@ -444,6 +444,20 @@ window.filterTournaments = function(category) {
     loadTournaments(category);
 };
 
+// Filter tournaments by category
+window.filterTournaments = function(category) {
+    // Update active button state
+    document.querySelectorAll('.category-filter-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.classList.contains(category)) {
+            btn.classList.add('active');
+        }
+    });
+    
+    // Load tournaments with filter
+    loadTournaments(category);
+};
+
 // Load tournaments from backend
 async function loadTournaments(category = 'all') {
     try {

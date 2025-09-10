@@ -919,22 +919,43 @@ window.submitDailyPrediction = async function() {
             method: 'POST',
             headers: { 'Authorization': `Bearer ${authToken}` }
         });
-        if (!res.ok) throw new Error(await res.text());
-
         const data = await res.json();
-        const points = data.points || 500;
-        currentUser.points += points;
+        
+        if (!res.ok) {
+            if (res.status === 429) {
+                // Handle cooldown error
+                const nextClaim = new Date(data.next_claim_available);
+                document.getElementById('daily-challenge').innerHTML = `
+                    <div class="challenge-cooldown">
+                        <div class="cooldown-icon">⏳</div>
+                        <h3 class="cooldown-title">Come Back Later!</h3>
+                        <p class="cooldown-message">${data.details}</p>
+                        <div id="cooldown-timer"></div>
+                    </div>`;
+                startCountdownTimer('cooldown-timer', nextClaim);
+            }
+            throw new Error(data.error || 'Failed to claim points');
+        }
+
+        // Update user points and UI
+        currentUser.points += data.points;
+        currentUser.last_claim_date = new Date().toISOString();
         updateUserInterface();
 
+        // Update success message with next available time
+        const nextClaim = new Date(data.next_claim_available);
         document.getElementById('daily-challenge').innerHTML = `
             <div class="challenge-success">
                 <div class="success-icon">✅</div>
-                <h3 class="success-title">Daily Points Claimed!</h3>
-                <p class="success-message">You earned ${points} points! Come back tomorrow for more.</p>
+                <h3 class="success-title">${data.points} Points Claimed!</h3>
+                <p class="success-message">Next claim available in:</p>
+                <div id="success-timer"></div>
             </div>`;
+        startCountdownTimer('success-timer', nextClaim);
+
     } catch (e) {
         console.error('Daily claim failed:', e);
-        alert('Claim failed: ' + e.message);
+        alert(e.message);
     }
 };
 

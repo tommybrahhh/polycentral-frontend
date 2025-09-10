@@ -31,6 +31,12 @@ document.addEventListener('DOMContentLoaded', function() {
     setInterval(() => {
         loadTournaments();
     }, 60000);
+    
+    // Add event listener for free coins claim button
+    const claimButton = document.querySelector('.coin-button');
+    if (claimButton) {
+        claimButton.addEventListener('click', submitDailyPrediction);
+    }
 });
 
 // Connect wallet functionality (now with backend integration)
@@ -795,6 +801,21 @@ window.openTournamentModal = function(tournamentId) {
         return;
     }
     
+    // Parse tournament options based on tournament_type
+    let options = [];
+    if (tournament.tournament_type === 'yes_no') {
+        options = ['Yes', 'No'];
+    } else if (tournament.tournament_type === 'multiple_choice' && tournament.options) {
+        try {
+            options = JSON.parse(tournament.options);
+        } catch (e) {
+            console.error('Error parsing tournament options:', e);
+            options = ['Option 1', 'Option 2', 'Option 3'];
+        }
+    } else {
+        options = ['Option 1', 'Option 2', 'Option 3'];
+    }
+    
     const modal = document.createElement('div');
     modal.className = 'modal-overlay';
     modal.style.position = 'fixed';
@@ -829,7 +850,7 @@ window.openTournamentModal = function(tournamentId) {
                 <div style="margin: 20px 0;">
                     <h5>Make Your Prediction:</h5>
                     <div class="prediction-options" style="margin-top: 10px;">
-                        ${tournament.options.map(option => `
+                        ${options.map(option => `
                             <label class="prediction-option" style="display: block; margin: 8px 0; cursor: pointer;">
                                 <input type="radio" name="prediction" value="${option}" style="margin-right: 8px;">
                                 <span>${option}</span>
@@ -877,7 +898,8 @@ window.enterTournament = async function(tournamentId) {
             await loadUserData();
             await loadTournaments();
         } else {
-            alert('Error: ' + data.error);
+            console.error('Tournament entry error:', data.error);
+            alert('Error: ' + (data.error || 'Failed to enter tournament'));
         }
     } catch (error) {
         console.error('Entry failed:', error);
@@ -899,7 +921,8 @@ window.submitDailyPrediction = async function() {
         });
         if (!res.ok) throw new Error(await res.text());
 
-        const { points } = await res.json();
+        const data = await res.json();
+        const points = data.points || 500;
         currentUser.points += points;
         updateUserInterface();
 
@@ -910,6 +933,7 @@ window.submitDailyPrediction = async function() {
                 <p class="success-message">You earned ${points} points! Come back tomorrow for more.</p>
             </div>`;
     } catch (e) {
+        console.error('Daily claim failed:', e);
         alert('Claim failed: ' + e.message);
     }
 };

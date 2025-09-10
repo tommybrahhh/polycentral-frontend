@@ -886,28 +886,31 @@ window.enterTournament = async function(tournamentId) {
 };
 
 // Submit daily prediction (updated with real points)
-window.submitDailyPrediction = function() {
+window.submitDailyPrediction = async function() {
     if (!authToken) {
         alert('Please login first!');
         connectWallet();
         return;
     }
-    
-    // Award 500 daily points (in real app, this would be a backend API call)
-    if (currentUser) {
-        const challengeCard = document.getElementById('daily-challenge');
-        challengeCard.innerHTML = `
+    try {
+        const res = await fetch(`${API_BASE_URL}/user/claim-free-points`, {
+            method: 'POST',
+            headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        if (!res.ok) throw new Error(await res.text());
+
+        const { points } = await res.json();
+        currentUser.points += points;
+        updateUserInterface();
+
+        document.getElementById('daily-challenge').innerHTML = `
             <div class="challenge-success">
                 <div class="success-icon">✅</div>
                 <h3 class="success-title">Daily Points Claimed!</h3>
-                <p class="success-message">You earned 500 points! Come back tomorrow for more.</p>
-            </div>
-        `;
-        
-        // In a real implementation, you'd call an API endpoint here
-        // For now, just update the UI optimistically
-        currentUser.points += 500;
-        updateUserInterface();
+                <p class="success-message">You earned ${points} points! Come back tomorrow for more.</p>
+            </div>`;
+    } catch (e) {
+        alert('Claim failed: ' + e.message);
     }
 };
 

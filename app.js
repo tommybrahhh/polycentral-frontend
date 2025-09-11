@@ -1,66 +1,66 @@
 // API Configuration
-const API_BASE_URL = window.location.hostname === 'localhost' 
-    ? 'http://localhost:3001/api' 
-    : 'https://polycentral-backend.onrender.com/api';
-    
+const API_BASE_URL = window.location.hostname === 'localhost'
+  ? 'http://localhost:3001/api'
+  : 'https://polycentral-backend.onrender.com/api'
+
 // Global State
-let currentUser = null;
-let authToken = localStorage.getItem('auth_token') || null;
-let tournaments = [];
+let currentUser = null
+let authToken = localStorage.getItem('auth_token') || null
+let tournaments = []
 
 // Initialize the application
-document.addEventListener('DOMContentLoaded', function() {
-    console.log('App initializing...');
-    
-    // Check if user is already logged in
-    if (authToken) {
-        loadUserData();
-    }
-    
-    // Load tournaments from backend
-    loadTournaments();
-    
-    // Initialize timers
-    updateDailyTimer();
-    setInterval(updateDailyTimer, 60000);
-    
-    // Initialize tournament tabs
-    initializeTournamentTabs();
-    
-    // Refresh tournaments every 60 seconds
-    setInterval(() => {
-        loadTournaments();
-    }, 60000);
-    
-    // Add event listener for free coins claim button
-    const claimButton = document.querySelector('.coin-button');
-    if (claimButton) {
-        claimButton.addEventListener('click', submitDailyPrediction);
-    }
-});
+document.addEventListener('DOMContentLoaded', function () {
+  console.log('App initializing...')
+
+  // Check if user is already logged in
+  if (authToken) {
+    loadUserData()
+  }
+
+  // Load tournaments from backend
+  loadTournaments()
+
+  // Initialize timers
+  updateDailyTimer()
+  setInterval(updateDailyTimer, 60000)
+
+  // Initialize tournament tabs
+  initializeTournamentTabs()
+
+  // Refresh tournaments every 60 seconds
+  setInterval(() => {
+    loadTournaments()
+  }, 60000)
+
+  // Add event listener for free coins claim button
+  const claimButton = document.querySelector('.coin-button')
+  if (claimButton) {
+    claimButton.addEventListener('click', submitDailyPrediction)
+  }
+})
 
 // Connect wallet functionality (now with backend integration)
-window.connectWallet = async function() {
-    // Show connection options modal instead of direct MetaMask
-    showConnectionOptionsModal();
-};
+window.connectWallet = async function () {
+  // Show connection options modal instead of direct MetaMask
+  showConnectionOptionsModal()
+}
 
 // Show connection options modal
-function showConnectionOptionsModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '1000';
-    
-    modal.innerHTML = `
+function showConnectionOptionsModal () {
+  const modal = document.createElement('div')
+  modal.className = 'modal-overlay'
+  modal.style.position = 'fixed'
+  modal.style.top = '0'
+  modal.style.left = '0'
+  modal.style.width = '100%'
+  modal.style.height = '100%'
+  modal.style.background = 'rgba(0, 0, 0, 0.8)'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.zIndex = '1000'
+
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 450px;">
             <div class="modal-header">
                 <h3>Connect to PolyCentral</h3>
@@ -116,77 +116,76 @@ function showConnectionOptionsModal() {
                 </p>
             </div>
         </div>
-    `;
-    
-    document.body.appendChild(modal);
+    `
+
+  document.body.appendChild(modal)
 }
 
 // Connect with MetaMask specifically
-window.connectWithMetaMask = async function() {
-    try {
-        if (typeof window.ethereum === 'undefined') {
-            alert('MetaMask is not installed. Please install MetaMask extension first.');
-            return;
-        }
-        
-        console.log('Attempting MetaMask connection...');
-        
-        // Request account access
-        const accounts = await window.ethereum.request({
-            method: 'eth_requestAccounts'
-        });
-        
-        if (!accounts || accounts.length === 0) {
-            throw new Error('No accounts found');
-        }
-        
-        const wallet_address = accounts[0];
-        console.log('MetaMask wallet connected:', wallet_address);
-        
-        // Close the connection options modal
-        closeModal();
-        
-        // Try to login with wallet address first
-        try {
-            await loginUser({ wallet_address });
-            console.log('Existing wallet user logged in');
-        } catch (loginError) {
-            console.log('Wallet not registered, showing registration modal...');
-            // If login fails, show registration modal with wallet address
-            showWalletRegistrationModal(wallet_address);
-        }
-        
-    } catch (error) {
-        console.error('MetaMask connection failed:', error);
-        
-        if (error.code === 4001) {
-            // User rejected the request
-            alert('MetaMask connection was cancelled');
-        } else if (error.code === -32002) {
-            // Request already pending
-            alert('MetaMask connection request already pending. Please check MetaMask.');
-        } else {
-            alert('MetaMask connection failed: ' + error.message);
-        }
+window.connectWithMetaMask = async function () {
+  try {
+    if (typeof window.ethereum === 'undefined') {
+      alert('MetaMask is not installed. Please install MetaMask extension first.')
+      return
     }
-};
+
+    console.log('Attempting MetaMask connection...')
+
+    // Request account access
+    const accounts = await window.ethereum.request({
+      method: 'eth_requestAccounts'
+    })
+
+    if (!accounts || accounts.length === 0) {
+      throw new Error('No accounts found')
+    }
+
+    const wallet_address = accounts[0]
+    console.log('MetaMask wallet connected:', wallet_address)
+
+    // Close the connection options modal
+    closeModal()
+
+    // Try to login with wallet address first
+    try {
+      await loginUser({ wallet_address })
+      console.log('Existing wallet user logged in')
+    } catch (loginError) {
+      console.log('Wallet not registered, showing registration modal...')
+      // If login fails, show registration modal with wallet address
+      showWalletRegistrationModal(wallet_address)
+    }
+  } catch (error) {
+    console.error('MetaMask connection failed:', error)
+
+    if (error.code === 4001) {
+      // User rejected the request
+      alert('MetaMask connection was cancelled')
+    } else if (error.code === -32002) {
+      // Request already pending
+      alert('MetaMask connection request already pending. Please check MetaMask.')
+    } else {
+      alert('MetaMask connection failed: ' + error.message)
+    }
+  }
+}
 
 // Show wallet registration modal (for new MetaMask users)
-function showWalletRegistrationModal(wallet_address) {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '1000';
-    
-    modal.innerHTML = `
+function showWalletRegistrationModal (wallet_address) {
+  const modal = document.createElement('div')
+  modal.className = 'modal-overlay'
+  modal.style.position = 'fixed'
+  modal.style.top = '0'
+  modal.style.left = '0'
+  modal.style.width = '100%'
+  modal.style.height = '100%'
+  modal.style.background = 'rgba(0, 0, 0, 0.8)'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.zIndex = '1000'
+
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
                 <h3>Complete Your Registration</h3>
@@ -210,50 +209,50 @@ function showWalletRegistrationModal(wallet_address) {
                 </div>
             </div>
         </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Add event listener for wallet registration
-    document.getElementById('wallet-register-btn').onclick = async () => {
-        const username = document.getElementById('wallet-username-input').value;
-        
-        if (!username) {
-            alert('Please enter a username');
-            return;
-        }
-        
-        try {
-            await registerUser({ wallet_address, username });
-            closeModal();
-        } catch (error) {
-            alert('Registration failed: ' + error.message);
-        }
-    };
+    `
+
+  document.body.appendChild(modal)
+
+  // Add event listener for wallet registration
+  document.getElementById('wallet-register-btn').onclick = async () => {
+    const username = document.getElementById('wallet-username-input').value
+
+    if (!username) {
+      alert('Please enter a username')
+      return
+    }
+
+    try {
+      await registerUser({ wallet_address, username })
+      closeModal()
+    } catch (error) {
+      alert('Registration failed: ' + error.message)
+    }
+  }
 }
 
 // Connect with Email
-window.connectWithEmail = function() {
-    closeModal(); // Close connection options modal
-    showEmailLoginModal();
-};
+window.connectWithEmail = function () {
+  closeModal() // Close connection options modal
+  showEmailLoginModal()
+}
 
 // Show email login modal
-function showEmailLoginModal() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '1000';
-    
-    modal.innerHTML = `
+function showEmailLoginModal () {
+  const modal = document.createElement('div')
+  modal.className = 'modal-overlay'
+  modal.style.position = 'fixed'
+  modal.style.top = '0'
+  modal.style.left = '0'
+  modal.style.width = '100%'
+  modal.style.height = '100%'
+  modal.style.background = 'rgba(0, 0, 0, 0.8)'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.zIndex = '1000'
+
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 400px;">
             <div class="modal-header">
                 <h3>Login</h3>
@@ -275,34 +274,34 @@ function showEmailLoginModal() {
                 </p>
             </div>
         </div>
-    `;
-    
-    document.body.appendChild(modal);
-    
-    // Add event listener for login button
-    document.getElementById('login-btn').onclick = async (e) => {
-        e.preventDefault();
-        const identifier = document.getElementById('login-input').value;
-        const password = document.getElementById('password-input').value;
-        
-        if (!identifier || !password) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        try {
-            await loginUser({ identifier, password });
-            closeModal();
-        } catch (error) {
-            alert('Login failed: ' + error.message);
-        }
-    };
+    `
+
+  document.body.appendChild(modal)
+
+  // Add event listener for login button
+  document.getElementById('login-btn').onclick = async (e) => {
+    e.preventDefault()
+    const identifier = document.getElementById('login-input').value
+    const password = document.getElementById('password-input').value
+
+    if (!identifier || !password) {
+      alert('Please fill in all fields')
+      return
+    }
+
+    try {
+      await loginUser({ identifier, password })
+      closeModal()
+    } catch (error) {
+      alert('Login failed: ' + error.message)
+    }
+  }
 }
 
 // Switch to register mode
-window.switchToRegister = function() {
-    const form = document.getElementById('email-auth-form');
-    form.innerHTML = `
+window.switchToRegister = function () {
+  const form = document.getElementById('email-auth-form')
+  form.innerHTML = `
         <input type="email" id="email-input" placeholder="Enter your email" required
                style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
         <input type="text" id="username-input" placeholder="Choose username" required
@@ -327,115 +326,114 @@ window.switchToRegister = function() {
             <button type="button" id="register-btn" class="btn-claim-daily" style="flex: 1;" disabled>Register</button>
             <button type="button" onclick="closeModal()" class="btn-secondary" style="flex: 1; background: #666;">Cancel</button>
         </div>
-    `;
-    
-    document.getElementById('register-btn').onclick = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email-input').value;
-        const username = document.getElementById('username-input').value;
-        const password = document.getElementById('password-input').value;
-        const confirmPassword = document.getElementById('confirm-password-input').value;
-        
-        if (!email || !username || !password || !confirmPassword) {
-            alert('Please fill in all fields');
-            return;
-        }
-        
-        if (password !== confirmPassword) {
-            alert('Passwords do not match');
-            return;
-        }
-        
-        try {
-            await registerUser({ email, username, password });
-            closeModal();
-        } catch (error) {
-            alert('Registration failed: ' + error.message);
-        }
-    };
-};
+    `
+
+  document.getElementById('register-btn').onclick = async (e) => {
+    e.preventDefault()
+    const email = document.getElementById('email-input').value
+    const username = document.getElementById('username-input').value
+    const password = document.getElementById('password-input').value
+    const confirmPassword = document.getElementById('confirm-password-input').value
+
+    if (!email || !username || !password || !confirmPassword) {
+      alert('Please fill in all fields')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      alert('Passwords do not match')
+      return
+    }
+
+    try {
+      await registerUser({ email, username, password })
+      closeModal()
+    } catch (error) {
+      alert('Registration failed: ' + error.message)
+    }
+  }
+}
 
 // Switch to login mode
-window.switchToLogin = function() {
-    const form = document.getElementById('email-auth-form');
-    form.innerHTML = `
+window.switchToLogin = function () {
+  const form = document.getElementById('email-auth-form')
+  form.innerHTML = `
         <input type="email" id="email-input" placeholder="Enter your email" required 
                style="width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
         <div style="display: flex; gap: 10px; margin-top: 20px;">
             <button type="button" id="login-btn" class="btn-claim-daily" style="flex: 1;">Login</button>
             <button type="button" onclick="closeModal(this)" class="btn-secondary" style="flex: 1; background: #666;">Cancel</button>
         </div>
-    `;
-    
-    document.getElementById('login-btn').onclick = async (e) => {
-        e.preventDefault();
-        const email = document.getElementById('email-input').value;
-        
-        if (!email) {
-            alert('Please enter your email');
-            return;
-        }
-        
-        try {
-            await loginUser({ email });
-            closeModal();
-        } catch (error) {
-            alert('Login failed: ' + error.message);
-        }
-    };
-};
+    `
+
+  document.getElementById('login-btn').onclick = async (e) => {
+    e.preventDefault()
+    const email = document.getElementById('email-input').value
+
+    if (!email) {
+      alert('Please enter your email')
+      return
+    }
+
+    try {
+      await loginUser({ email })
+      closeModal()
+    } catch (error) {
+      alert('Login failed: ' + error.message)
+    }
+  }
+}
 
 // Close modal
-window.closeModal = function(button) {
-    const modal = button ? button.closest('.modal-overlay') : document.querySelector('.modal-overlay');
-    if (modal) document.body.removeChild(modal);
-};
+window.closeModal = function (button) {
+  const modal = button ? button.closest('.modal-overlay') : document.querySelector('.modal-overlay')
+  if (modal) document.body.removeChild(modal)
+}
 
 // Register user
-async function registerUser(userData) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/register`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(userData)
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        
-        authToken = data.token;
-        currentUser = data.user;
-        localStorage.setItem('auth_token', authToken);
-        
-        console.log('User registered:', currentUser.username || currentUser.email);
-        updateUserInterface();
-        loadTournaments();
-        
-        // Show success notification
-        showSuccessNotification();
-        
-    } catch (error) {
-        console.error('Registration error:', error);
-        throw error;
-    }
+async function registerUser (userData) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData)
+    })
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+
+    authToken = data.token
+    currentUser = data.user
+    localStorage.setItem('auth_token', authToken)
+
+    console.log('User registered:', currentUser.username || currentUser.email)
+    updateUserInterface()
+    loadTournaments()
+
+    // Show success notification
+    showSuccessNotification()
+  } catch (error) {
+    console.error('Registration error:', error)
+    throw error
+  }
 }
 
 // Show success notification after registration
-function showSuccessNotification() {
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '1000';
-    
-    modal.innerHTML = `
+function showSuccessNotification () {
+  const modal = document.createElement('div')
+  modal.className = 'modal-overlay'
+  modal.style.position = 'fixed'
+  modal.style.top = '0'
+  modal.style.left = '0'
+  modal.style.width = '100%'
+  modal.style.height = '100%'
+  modal.style.background = 'rgba(0, 0, 0, 0.8)'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.zIndex = '1000'
+
+  modal.innerHTML = `
         <div class="modal-content" style="max-width: 400px; text-align: center;">
             <div class="modal-header">
                 <h3>Registration Successful!</h3>
@@ -452,181 +450,180 @@ function showSuccessNotification() {
                 </button>
             </div>
         </div>
-    `;
-    
-    document.body.appendChild(modal);
+    `
+
+  document.body.appendChild(modal)
 }
 
 // Password validation logic
-window.validatePassword = function() {
-    const password = document.getElementById('password-input')?.value || '';
-    const confirmPassword = document.getElementById('confirm-password-input')?.value || '';
-    const registerBtn = document.getElementById('register-btn');
-    const matchError = document.getElementById('password-match');
-    const strengthDiv = document.getElementById('password-strength');
-    
-    if (!strengthDiv) return;
-    
-    // Password strength criteria
-    const hasMinLength = password.length >= 8;
-    const hasUpperCase = /[A-Z]/.test(password);
-    const hasLowerCase = /[a-z]/.test(password);
-    const hasDigit = /\d/.test(password);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password);
-    const passwordsMatch = password === confirmPassword;
-    
-    // Update strength indicators
-    document.getElementById('length').style.color = hasMinLength ? '#A5FF90' : '#ff6f00';
-    document.getElementById('upper').style.color = hasUpperCase ? '#A5FF90' : '#ff6f00';
-    document.getElementById('lower').style.color = hasLowerCase ? '#A5FF90' : '#ff6f00';
-    document.getElementById('digit').style.color = hasDigit ? '#A5FF90' : '#ff6f00';
-    document.getElementById('special').style.color = hasSpecial ? '#A5FF90' : '#ff6f00';
-    
-    // Update match indicator
-    if (matchError) {
-        if (confirmPassword && !passwordsMatch) {
-            matchError.style.display = 'block';
-        } else {
-            matchError.style.display = 'none';
-        }
+window.validatePassword = function () {
+  const password = document.getElementById('password-input')?.value || ''
+  const confirmPassword = document.getElementById('confirm-password-input')?.value || ''
+  const registerBtn = document.getElementById('register-btn')
+  const matchError = document.getElementById('password-match')
+  const strengthDiv = document.getElementById('password-strength')
+
+  if (!strengthDiv) return
+
+  // Password strength criteria
+  const hasMinLength = password.length >= 8
+  const hasUpperCase = /[A-Z]/.test(password)
+  const hasLowerCase = /[a-z]/.test(password)
+  const hasDigit = /\d/.test(password)
+  const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(password)
+  const passwordsMatch = password === confirmPassword
+
+  // Update strength indicators
+  document.getElementById('length').style.color = hasMinLength ? '#A5FF90' : '#ff6f00'
+  document.getElementById('upper').style.color = hasUpperCase ? '#A5FF90' : '#ff6f00'
+  document.getElementById('lower').style.color = hasLowerCase ? '#A5FF90' : '#ff6f00'
+  document.getElementById('digit').style.color = hasDigit ? '#A5FF90' : '#ff6f00'
+  document.getElementById('special').style.color = hasSpecial ? '#A5FF90' : '#ff6f00'
+
+  // Update match indicator
+  if (matchError) {
+    if (confirmPassword && !passwordsMatch) {
+      matchError.style.display = 'block'
+    } else {
+      matchError.style.display = 'none'
     }
-    
-    // Enable/disable register button
-    if (registerBtn) {
-        const isValid = hasMinLength && hasUpperCase && hasLowerCase && hasDigit && hasSpecial && passwordsMatch;
-        registerBtn.disabled = !isValid;
-    }
+  }
+
+  // Enable/disable register button
+  if (registerBtn) {
+    const isValid = hasMinLength && hasUpperCase && hasLowerCase && hasDigit && hasSpecial && passwordsMatch
+    registerBtn.disabled = !isValid
+  }
 }
 
 // Login user
-async function loginUser(credentials) {
-    try {
-        const response = await fetch(`${API_BASE_URL}/auth/login`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(credentials)
-        });
-        
-        const data = await response.json();
-        if (!response.ok) throw new Error(data.error);
-        
-        authToken = data.token;
-        currentUser = data.user;
-        localStorage.setItem('auth_token', authToken);
-        
-        console.log('User logged in:', currentUser.username || currentUser.email);
-        updateUserInterface();
-        loadTournaments();
-        
-    } catch (error) {
-        console.error('Login error:', error);
-        throw error;
-    }
+async function loginUser (credentials) {
+  try {
+    const response = await fetch(`${API_BASE_URL}/auth/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(credentials)
+    })
+
+    const data = await response.json()
+    if (!response.ok) throw new Error(data.error)
+
+    authToken = data.token
+    currentUser = data.user
+    localStorage.setItem('auth_token', authToken)
+
+    console.log('User logged in:', currentUser.username || currentUser.email)
+    updateUserInterface()
+    loadTournaments()
+  } catch (error) {
+    console.error('Login error:', error)
+    throw error
+  }
 }
 
 // Initialize password validation on load
-document.addEventListener('DOMContentLoaded', function() {
-    // Add event listeners for any existing password fields
-    const passwordInput = document.getElementById('password-input');
-    const confirmPasswordInput = document.getElementById('confirm-password-input');
-    
-    if (passwordInput) {
-        passwordInput.addEventListener('input', validatePassword);
-    }
-    
-    if (confirmPasswordInput) {
-        confirmPasswordInput.addEventListener('input', validatePassword);
-    }
-});
+document.addEventListener('DOMContentLoaded', function () {
+  // Add event listeners for any existing password fields
+  const passwordInput = document.getElementById('password-input')
+  const confirmPasswordInput = document.getElementById('confirm-password-input')
+
+  if (passwordInput) {
+    passwordInput.addEventListener('input', validatePassword)
+  }
+
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', validatePassword)
+  }
+})
 
 // Load user data from backend
-async function loadUserData() {
-    try {
-        const response = await fetch(`${API_BASE_URL}/user/stats`, {
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        
-        if (response.ok) {
-            currentUser = await response.json();
-            updateUserInterface();
-        } else {
-            // Token invalid, clear auth
-            authToken = null;
-            currentUser = null;
-            localStorage.removeItem('auth_token');
-        }
-    } catch (error) {
-        console.error('Failed to load user data:', error);
+async function loadUserData () {
+  try {
+    const response = await fetch(`${API_BASE_URL}/user/stats`, {
+      headers: { Authorization: `Bearer ${authToken}` }
+    })
+
+    if (response.ok) {
+      currentUser = await response.json()
+      updateUserInterface()
+    } else {
+      // Token invalid, clear auth
+      authToken = null
+      currentUser = null
+      localStorage.removeItem('auth_token')
     }
+  } catch (error) {
+    console.error('Failed to load user data:', error)
+  }
 }
 
 // Filter tournaments by category
-window.filterTournaments = function(category) {
-    // Update active button state
-    document.querySelectorAll('.category-filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.classList.contains(category)) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // Load tournaments with filter
-    loadTournaments(category);
-};
+window.filterTournaments = function (category) {
+  // Update active button state
+  document.querySelectorAll('.category-filter-btn').forEach(btn => {
+    btn.classList.remove('active')
+    if (btn.classList.contains(category)) {
+      btn.classList.add('active')
+    }
+  })
+
+  // Load tournaments with filter
+  loadTournaments(category)
+}
 
 // Filter tournaments by category
-window.filterTournaments = function(category) {
-    // Update active button state
-    document.querySelectorAll('.category-filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.classList.contains(category)) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // Load tournaments with filter
-    loadTournaments(category);
-};
+window.filterTournaments = function (category) {
+  // Update active button state
+  document.querySelectorAll('.category-filter-btn').forEach(btn => {
+    btn.classList.remove('active')
+    if (btn.classList.contains(category)) {
+      btn.classList.add('active')
+    }
+  })
+
+  // Load tournaments with filter
+  loadTournaments(category)
+}
 
 // Load tournaments from backend
-async function loadTournaments(category = 'all') {
-    try {
-        const response = await fetch(`${API_BASE_URL}/tournaments?category=${category}`);
-        if (response.ok) {
-            tournaments = await response.json();
-            displayTournaments();
-            updateCategoryContent(category);
-            console.log(`Loaded ${tournaments.length} tournaments for category: ${category}`);
-        } else {
-            console.error('Failed to load tournaments:', response.statusText);
-        }
-    } catch (error) {
-        console.error('Error loading tournaments:', error);
+async function loadTournaments (category = 'all') {
+  try {
+    const response = await fetch(`${API_BASE_URL}/tournaments?category=${category}`)
+    if (response.ok) {
+      tournaments = await response.json()
+      displayTournaments()
+      updateCategoryContent(category)
+      console.log(`Loaded ${tournaments.length} tournaments for category: ${category}`)
+    } else {
+      console.error('Failed to load tournaments:', response.statusText)
     }
+  } catch (error) {
+    console.error('Error loading tournaments:', error)
+  }
 }
 
 // Ensure "All" filter is active on initial load
-document.addEventListener('DOMContentLoaded', function() {
-    document.querySelector('.category-filter-btn.all')?.classList.add('active');
-});
+document.addEventListener('DOMContentLoaded', function () {
+  document.querySelector('.category-filter-btn.all')?.classList.add('active')
+})
 // Display tournaments in UI
-function displayTournaments() {
-    if (tournaments.length === 0) return;
-    
-    // Update main tournament display
-    if (tournaments.length > 0) {
-        updateMainTournament(tournaments[0]);
-    }
-    
-    // Update hot tournaments section (tournaments with high participation)
-    const hotTournaments = tournaments
-        .filter(t => t.current_participants > 5)
-        .slice(0, 3);
-    
-    const hotTournamentsGrid = document.getElementById('hot-tournaments-grid');
-    if (hotTournamentsGrid) {
-        hotTournamentsGrid.style.display = hotTournaments.length > 0 ? 'block' : 'none';
-        hotTournamentsGrid.innerHTML = `
+function displayTournaments () {
+  if (tournaments.length === 0) return
+
+  // Update main tournament display
+  if (tournaments.length > 0) {
+    updateMainTournament(tournaments[0])
+  }
+
+  // Update hot tournaments section (tournaments with high participation)
+  const hotTournaments = tournaments
+    .filter(t => t.current_participants > 5)
+    .slice(0, 3)
+
+  const hotTournamentsGrid = document.getElementById('hot-tournaments-grid')
+  if (hotTournamentsGrid) {
+    hotTournamentsGrid.style.display = hotTournaments.length > 0 ? 'block' : 'none'
+    hotTournamentsGrid.innerHTML = `
             <h3 style="color: var(--primary); margin-bottom: 15px;">HOT TOURNAMENTS</h3>
             ${hotTournaments.map(tournament => `
                 <div class="tournament-card hot-card" style="margin-bottom: 10px; padding: 15px; border: 1px solid #333; border-radius: 8px; background: var(--gradient-card);">
@@ -641,18 +638,18 @@ function displayTournaments() {
                     </button>
                 </div>
             `).join('')}
-        `;
-    }
-    
-    // Update rising tournaments section (newer tournaments)
-    const risingTournaments = tournaments
-        .filter(t => t.current_participants <= 5)
-        .slice(0, 3);
-    
-    const risingTournamentsGrid = document.getElementById('rising-tournaments-grid');
-    if (risingTournamentsGrid) {
-        risingTournamentsGrid.style.display = risingTournaments.length > 0 ? 'block' : 'none';
-        risingTournamentsGrid.innerHTML = `
+        `
+  }
+
+  // Update rising tournaments section (newer tournaments)
+  const risingTournaments = tournaments
+    .filter(t => t.current_participants <= 5)
+    .slice(0, 3)
+
+  const risingTournamentsGrid = document.getElementById('rising-tournaments-grid')
+  if (risingTournamentsGrid) {
+    risingTournamentsGrid.style.display = risingTournaments.length > 0 ? 'block' : 'none'
+    risingTournamentsGrid.innerHTML = `
             <h3 style="color: var(--chart-1); margin-bottom: 15px;">RISING TOURNAMENTS</h3>
             ${risingTournaments.map(tournament => `
                 <div class="tournament-card rising-card" style="margin-bottom: 10px; padding: 15px; border: 1px solid #333; border-radius: 8px; background: var(--gradient-card);">
@@ -667,28 +664,28 @@ function displayTournaments() {
                     </button>
                 </div>
             `).join('')}
-        `;
-    }
+        `
+  }
 }
 
 // Update category content areas with real data
-function updateCategoryContent(category) {
-    // Hide all content areas
-    document.querySelectorAll('.tournament-content-area').forEach(area => {
-        area.classList.remove('active');
-    });
-    
-    // Show selected category content
-    const activeContent = document.getElementById(`content-${category}`);
-    if (activeContent) {
-        activeContent.classList.add('active');
-        
-        // Update category-specific tournaments
-        const categoryTournaments = category === 'all' ? tournaments : tournaments.filter(t => t.category === category);
-        const grid = activeContent.querySelector('.relevant-tournaments-grid');
-        
-        if (grid) {
-            grid.innerHTML = categoryTournaments.map(tournament => `
+function updateCategoryContent (category) {
+  // Hide all content areas
+  document.querySelectorAll('.tournament-content-area').forEach(area => {
+    area.classList.remove('active')
+  })
+
+  // Show selected category content
+  const activeContent = document.getElementById(`content-${category}`)
+  if (activeContent) {
+    activeContent.classList.add('active')
+
+    // Update category-specific tournaments
+    const categoryTournaments = category === 'all' ? tournaments : tournaments.filter(t => t.category === category)
+    const grid = activeContent.querySelector('.relevant-tournaments-grid')
+
+    if (grid) {
+      grid.innerHTML = categoryTournaments.map(tournament => `
                 <div class="relevant-tournament-card" data-category="${tournament.category}">
                     <div class="category-badge ${tournament.category}-badge">${tournament.category}</div>
                     <h4 class="tournament-card-title">${tournament.title}</h4>
@@ -706,17 +703,17 @@ function updateCategoryContent(category) {
                         Enter Tournament
                     </button>
                 </div>
-            `).join('');
-        }
+            `).join('')
     }
+  }
 }
 
 // Update main tournament display
-function updateMainTournament(tournament) {
-    const mainDisplay = document.querySelector('.main-tournament-display');
-    if (!mainDisplay) return;
-    
-    mainDisplay.innerHTML = `
+function updateMainTournament (tournament) {
+  const mainDisplay = document.querySelector('.main-tournament-display')
+  if (!mainDisplay) return
+
+  mainDisplay.innerHTML = `
         <div class="tournament-display-label label-main">MAIN EVENT</div>
         <div class="tournament-header">
             <div>
@@ -748,92 +745,92 @@ function updateMainTournament(tournament) {
         <button class="btn-enter-tournament" onclick="openTournamentModal('${tournament.id}')">
             Enter Main Tournament
         </button>
-    `;
-    
-    // Start countdown timer
-    startCountdownTimer('main-countdown', new Date(tournament.end_time));
+    `
+
+  // Start countdown timer
+  startCountdownTimer('main-countdown', new Date(tournament.end_time))
 }
 
 // Start countdown timer
-function startCountdownTimer(elementId, endTime) {
-    const element = document.getElementById(elementId);
-    if (!element) return;
-    
-    // Clear any existing interval
-    if (element.countdownInterval) {
-        clearInterval(element.countdownInterval);
+function startCountdownTimer (elementId, endTime) {
+  const element = document.getElementById(elementId)
+  if (!element) return
+
+  // Clear any existing interval
+  if (element.countdownInterval) {
+    clearInterval(element.countdownInterval)
+  }
+
+  const updateTimer = () => {
+    const now = new Date().getTime()
+    const distance = new Date(endTime).getTime() - now
+
+    if (distance < 0) {
+      element.textContent = 'ENDED'
+      clearInterval(element.countdownInterval)
+      return
     }
-    
-    const updateTimer = () => {
-        const now = new Date().getTime();
-        const distance = new Date(endTime).getTime() - now;
-        
-        if (distance < 0) {
-            element.textContent = "ENDED";
-            clearInterval(element.countdownInterval);
-            return;
-        }
-        
-        const hours = Math.floor(distance / (1000 * 60 * 60));
-        const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-        const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-        
-        element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-    };
-    
-    updateTimer();
-    element.countdownInterval = setInterval(updateTimer, 1000);
+
+    const hours = Math.floor(distance / (1000 * 60 * 60))
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60))
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000)
+
+    element.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`
+  }
+
+  updateTimer()
+  element.countdownInterval = setInterval(updateTimer, 1000)
 }
 
 // Open tournament modal (updated with real data)
-window.openTournamentModal = function(tournamentId) {
-    if (!authToken) {
-        alert('Please login first to enter tournaments!');
-        connectWallet();
-        return;
+window.openTournamentModal = function (tournamentId) {
+  if (!authToken) {
+    alert('Please login first to enter tournaments!')
+    connectWallet()
+    return
+  }
+
+  const tournament = tournaments.find(t => t.id === parseInt(tournamentId))
+  if (!tournament) {
+    console.error('Tournament not found:', tournamentId)
+    console.log('Available tournaments:', tournaments)
+    alert('Tournament not found!')
+    return
+  }
+
+  // Parse tournament options based on tournament_type
+  let options = []
+  if (tournament.tournament_type === 'yes_no') {
+    options = ['Yes', 'No']
+  } else if (tournament.tournament_type === 'multiple_choice' && tournament.options) {
+    try {
+      options = JSON.parse(tournament.options)
+    } catch (e) {
+      console.error('Error parsing tournament options:', e)
+      options = ['Option 1', 'Option 2', 'Option 3']
     }
-    
-    const tournament = tournaments.find(t => t.id === parseInt(tournamentId));
-    if (!tournament) {
-        console.error('Tournament not found:', tournamentId);
-        console.log('Available tournaments:', tournaments);
-        alert('Tournament not found!');
-        return;
-    }
-    
-    // Parse tournament options based on tournament_type
-    let options = [];
-    if (tournament.tournament_type === 'yes_no') {
-        options = ['Yes', 'No'];
-    } else if (tournament.tournament_type === 'multiple_choice' && tournament.options) {
-        try {
-            options = JSON.parse(tournament.options);
-        } catch (e) {
-            console.error('Error parsing tournament options:', e);
-            options = ['Option 1', 'Option 2', 'Option 3'];
-        }
-    } else {
-        options = ['Option 1', 'Option 2', 'Option 3'];
-    }
-    
-    const modal = document.createElement('div');
-    modal.className = 'modal-overlay';
-    modal.style.position = 'fixed';
-    modal.style.top = '0';
-    modal.style.left = '0';
-    modal.style.width = '100%';
-    modal.style.height = '100%';
-    modal.style.background = 'rgba(0, 0, 0, 0.8)';
-    modal.style.display = 'flex';
-    modal.style.alignItems = 'center';
-    modal.style.justifyContent = 'center';
-    modal.style.zIndex = '1000';
-    
-    modal.onclick = (e) => {
-        if (e.target === modal) closeModal();
-    };
-    
-    modal.innerHTML = `
+  } else {
+    options = ['Option 1', 'Option 2', 'Option 3']
+  }
+
+  const modal = document.createElement('div')
+  modal.className = 'modal-overlay'
+  modal.style.position = 'fixed'
+  modal.style.top = '0'
+  modal.style.left = '0'
+  modal.style.width = '100%'
+  modal.style.height = '100%'
+  modal.style.background = 'rgba(0, 0, 0, 0.8)'
+  modal.style.display = 'flex'
+  modal.style.alignItems = 'center'
+  modal.style.justifyContent = 'center'
+  modal.style.zIndex = '1000'
+
+  modal.onclick = (e) => {
+    if (e.target === modal) closeModal()
+  }
+
+  modal.innerHTML = `
         <div class="modal-content">
             <div class="modal-header">
                 <h3>Enter Tournament</h3>
@@ -865,190 +862,188 @@ window.openTournamentModal = function(tournamentId) {
                 </button>
             </div>
         </div>
-    `;
-    
-    document.body.appendChild(modal);
-};
+    `
+
+  document.body.appendChild(modal)
+}
 
 // Enter tournament (updated with backend API)
-window.enterTournament = async function(tournamentId) {
-    const prediction = document.querySelector('input[name="prediction"]:checked')?.value;
-    if (!prediction) {
-        alert('Please select a prediction!');
-        return;
+window.enterTournament = async function (tournamentId) {
+  const prediction = document.querySelector('input[name="prediction"]:checked')?.value
+  if (!prediction) {
+    alert('Please select a prediction!')
+    return
+  }
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/enter`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${authToken}`
+      },
+      body: JSON.stringify({ prediction })
+    })
+
+    const data = await response.json()
+
+    if (response.ok) {
+      alert('Successfully entered tournament! Good luck!')
+      closeModal()
+
+      // Refresh user data and tournaments
+      await loadUserData()
+      await loadTournaments()
+    } else {
+      console.error('Tournament entry error:', data.error)
+      alert('Error: ' + (data.error || 'Failed to enter tournament'))
     }
-    
-    try {
-        const response = await fetch(`${API_BASE_URL}/tournaments/${tournamentId}/enter`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${authToken}`
-            },
-            body: JSON.stringify({ prediction })
-        });
-        
-        const data = await response.json();
-        
-        if (response.ok) {
-            alert('Successfully entered tournament! Good luck!');
-            closeModal();
-            
-            // Refresh user data and tournaments
-            await loadUserData();
-            await loadTournaments();
-        } else {
-            console.error('Tournament entry error:', data.error);
-            alert('Error: ' + (data.error || 'Failed to enter tournament'));
-        }
-    } catch (error) {
-        console.error('Entry failed:', error);
-        alert('Failed to enter tournament. Please try again.');
-    }
-};
+  } catch (error) {
+    console.error('Entry failed:', error)
+    alert('Failed to enter tournament. Please try again.')
+  }
+}
 
 // Submit daily prediction (updated with real points)
-window.submitDailyPrediction = async function() {
-    if (!authToken) {
-        alert('Please login first!');
-        connectWallet();
-        return;
-    }
-    try {
-        const res = await fetch(`${API_BASE_URL}/user/claim-free-points`, {
-            method: 'POST',
-            headers: { 'Authorization': `Bearer ${authToken}` }
-        });
-        const data = await res.json();
-        
-        if (!res.ok) {
-            if (res.status === 429) {
-                // Handle cooldown error
-                const nextClaim = new Date(data.next_claim_available);
-                document.getElementById('daily-challenge').innerHTML = `
+window.submitDailyPrediction = async function () {
+  if (!authToken) {
+    alert('Please login first!')
+    connectWallet()
+    return
+  }
+  try {
+    const res = await fetch(`${API_BASE_URL}/user/claim-free-points`, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${authToken}` }
+    })
+    const data = await res.json()
+
+    if (!res.ok) {
+      if (res.status === 429) {
+        // Handle cooldown error
+        const nextClaim = new Date(data.next_claim_available)
+        document.getElementById('daily-challenge').innerHTML = `
                     <div class="challenge-cooldown">
                         <div class="cooldown-icon">⏳</div>
                         <h3 class="cooldown-title">Come Back Later!</h3>
                         <p class="cooldown-message">${data.details}</p>
                         <div id="cooldown-timer"></div>
-                    </div>`;
-                startCountdownTimer('cooldown-timer', nextClaim);
-            }
-            throw new Error(data.error || 'Failed to claim points');
-        }
+                    </div>`
+        startCountdownTimer('cooldown-timer', nextClaim)
+      }
+      throw new Error(data.error || 'Failed to claim points')
+    }
 
-        // Update user points and UI
-        currentUser.points += data.points;
-        currentUser.last_claim_date = new Date().toISOString();
-        updateUserInterface();
+    // Update user points and UI
+    currentUser.points += data.points
+    currentUser.last_claim_date = new Date().toISOString()
+    updateUserInterface()
 
-        // Update success message with next available time
-        const nextClaim = new Date(data.next_claim_available);
-        document.getElementById('daily-challenge').innerHTML = `
+    // Update success message with next available time
+    const nextClaim = new Date(data.next_claim_available)
+    document.getElementById('daily-challenge').innerHTML = `
             <div class="challenge-success">
                 <div class="success-icon">✅</div>
                 <h3 class="success-title">${data.points} Points Claimed!</h3>
                 <p class="success-message">Next claim available in:</p>
                 <div id="success-timer"></div>
-            </div>`;
-        startCountdownTimer('success-timer', nextClaim);
-
-    } catch (e) {
-        console.error('Daily claim failed:', e);
-        alert(e.message);
-    }
-};
+            </div>`
+    startCountdownTimer('success-timer', nextClaim)
+  } catch (e) {
+    console.error('Daily claim failed:', e)
+    alert(e.message)
+  }
+}
 
 // Update user interface
-function updateUserInterface() {
-    console.log('Updating UI for user:', currentUser);
-    
-    if (currentUser) {
-        document.getElementById('connect-btn').style.display = 'none';
-        document.getElementById('user-section').style.display = 'flex';
-        
-        // Update points displays safely
-        const userPointsEl = document.getElementById('user-points');
-        const pointsBalanceEl = document.getElementById('points-balance');
-        const accuracyEl = document.getElementById('accuracy-rate');
-        const streakEl = document.getElementById('current-streak');
-        const rankEl = document.getElementById('global-rank');
-        
-        if (userPointsEl) userPointsEl.textContent = `${currentUser.points.toLocaleString()} pts`;
-        if (pointsBalanceEl) pointsBalanceEl.textContent = currentUser.points.toLocaleString();
-        if (accuracyEl) accuracyEl.textContent = `${currentUser.accuracy || 0}%`;
-        if (streakEl) streakEl.textContent = `${currentUser.won_tournaments || 0} Wins`;
-        
-        // Simple rank calculation
-        const mockRank = Math.max(1, 100 - Math.floor(currentUser.points / 50));
-        if (rankEl) rankEl.textContent = `#${mockRank}`;
-        
-        // Update user avatar with first letter
-        const avatar = document.querySelector('.user-avatar');
-        if (avatar) {
-            avatar.textContent = (currentUser.username || currentUser.email || 'U')[0].toUpperCase();
-        }
-    } else {
-        document.getElementById('connect-btn').style.display = 'block';
-        document.getElementById('user-section').style.display = 'none';
+function updateUserInterface () {
+  console.log('Updating UI for user:', currentUser)
+
+  if (currentUser) {
+    document.getElementById('connect-btn').style.display = 'none'
+    document.getElementById('user-section').style.display = 'flex'
+
+    // Update points displays safely
+    const userPointsEl = document.getElementById('user-points')
+    const pointsBalanceEl = document.getElementById('points-balance')
+    const accuracyEl = document.getElementById('accuracy-rate')
+    const streakEl = document.getElementById('current-streak')
+    const rankEl = document.getElementById('global-rank')
+
+    if (userPointsEl) userPointsEl.textContent = `${currentUser.points.toLocaleString()} pts`
+    if (pointsBalanceEl) pointsBalanceEl.textContent = currentUser.points.toLocaleString()
+    if (accuracyEl) accuracyEl.textContent = `${currentUser.accuracy || 0}%`
+    if (streakEl) streakEl.textContent = `${currentUser.won_tournaments || 0} Wins`
+
+    // Simple rank calculation
+    const mockRank = Math.max(1, 100 - Math.floor(currentUser.points / 50))
+    if (rankEl) rankEl.textContent = `#${mockRank}`
+
+    // Update user avatar with first letter
+    const avatar = document.querySelector('.user-avatar')
+    if (avatar) {
+      avatar.textContent = (currentUser.username || currentUser.email || 'U')[0].toUpperCase()
     }
+  } else {
+    document.getElementById('connect-btn').style.display = 'block'
+    document.getElementById('user-section').style.display = 'none'
+  }
 }
 
 // Tournament category filtering
-function initializeTournamentTabs() {
-    const tabBtns = document.querySelectorAll('.tab-btn');
-    tabBtns.forEach(btn => {
-        btn.addEventListener('click', function() {
-            tabBtns.forEach(tab => tab.classList.remove('active'));
-            this.classList.add('active');
-            
-            const category = this.dataset.category;
-            loadTournaments(category);
-        });
-    });
+function initializeTournamentTabs () {
+  const tabBtns = document.querySelectorAll('.tab-btn')
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', function () {
+      tabBtns.forEach(tab => tab.classList.remove('active'))
+      this.classList.add('active')
+
+      const category = this.dataset.category
+      loadTournaments(category)
+    })
+  })
 }
 
 // Category filtering functions
-window.filterByCategory = function(category) {
-    // Update active button state
-    document.querySelectorAll('.category-filter-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if (btn.dataset.category === category) {
-            btn.classList.add('active');
-        }
-    });
-    
-    // Load tournaments for category
-    loadTournaments(category);
-};
-
-window.showTournamentType = function(type) {
-    
-    // Show relevant tournaments
-    const hotGrid = document.getElementById('hot-tournaments-grid');
-    const risingGrid = document.getElementById('rising-tournaments-grid');
-    
-    if (type === 'hot' && hotGrid) {
-        hotGrid.style.display = 'block';
-        hotGrid.scrollIntoView({ behavior: 'smooth' });
-        // Hide rising grid
-        if (risingGrid) risingGrid.style.display = 'none';
-    } else if (type === 'rising' && risingGrid) {
-        risingGrid.style.display = 'block';
-        risingGrid.scrollIntoView({ behavior: 'smooth' });
-        // Hide hot grid
-        if (hotGrid) hotGrid.style.display = 'none';
+window.filterByCategory = function (category) {
+  // Update active button state
+  document.querySelectorAll('.category-filter-btn').forEach(btn => {
+    btn.classList.remove('active')
+    if (btn.dataset.category === category) {
+      btn.classList.add('active')
     }
-};
+  })
+
+  // Load tournaments for category
+  loadTournaments(category)
+}
+
+window.showTournamentType = function (type) {
+  // Show relevant tournaments
+  const hotGrid = document.getElementById('hot-tournaments-grid')
+  const risingGrid = document.getElementById('rising-tournaments-grid')
+
+  if (type === 'hot' && hotGrid) {
+    hotGrid.style.display = 'block'
+    hotGrid.scrollIntoView({ behavior: 'smooth' })
+    // Hide rising grid
+    if (risingGrid) risingGrid.style.display = 'none'
+  } else if (type === 'rising' && risingGrid) {
+    risingGrid.style.display = 'block'
+    risingGrid.scrollIntoView({ behavior: 'smooth' })
+    // Hide hot grid
+    if (hotGrid) hotGrid.style.display = 'none'
+  }
+}
 
 // User dropdown functionality
-window.toggleUserDropdown = function() {
-    if (!currentUser) return;
-    
-    const dropdown = document.getElementById('user-dropdown');
-    if (dropdown.style.display === 'none' || !dropdown.style.display) {
-        dropdown.style.display = 'block';
-        dropdown.innerHTML = `
+window.toggleUserDropdown = function () {
+  if (!currentUser) return
+
+  const dropdown = document.getElementById('user-dropdown')
+  if (dropdown.style.display === 'none' || !dropdown.style.display) {
+    dropdown.style.display = 'block'
+    dropdown.innerHTML = `
             <div class="dropdown-content">
                 <div class="dropdown-item">
                     <strong>Username:</strong> ${currentUser.username || 'N/A'}
@@ -1057,9 +1052,9 @@ window.toggleUserDropdown = function() {
                     <strong>Email:</strong> ${currentUser.email || 'N/A'}
                 </div>
                 <div class="dropdown-item">
-                    <strong>Wallet:</strong> ${currentUser.wallet_address ? 
-                        currentUser.wallet_address.slice(0, 6) + '...' + currentUser.wallet_address.slice(-4) : 
-                        'Not connected'}
+                    <strong>Wallet:</strong> ${currentUser.wallet_address
+                        ? currentUser.wallet_address.slice(0, 6) + '...' + currentUser.wallet_address.slice(-4)
+                        : 'Not connected'}
                 </div>
                 <div class="dropdown-item">
                     <strong>Tournaments:</strong> ${currentUser.total_tournaments}
@@ -1072,88 +1067,88 @@ window.toggleUserDropdown = function() {
                     Logout
                 </div>
             </div>
-        `;
-    } else {
-        dropdown.style.display = 'none';
-    }
-};
+        `
+  } else {
+    dropdown.style.display = 'none'
+  }
+}
 
 // Disconnect/logout
-window.disconnectWallet = function() {
-    currentUser = null;
-    authToken = null;
-    localStorage.removeItem('auth_token');
-    
-    document.getElementById('connect-btn').style.display = 'block';
-    document.getElementById('user-section').style.display = 'none';
-    document.getElementById('user-dropdown').style.display = 'none';
-    
-    console.log('User logged out');
-};
+window.disconnectWallet = function () {
+  currentUser = null
+  authToken = null
+  localStorage.removeItem('auth_token')
+
+  document.getElementById('connect-btn').style.display = 'block'
+  document.getElementById('user-section').style.display = 'none'
+  document.getElementById('user-dropdown').style.display = 'none'
+
+  console.log('User logged out')
+}
 
 // Update daily timer
-function updateDailyTimer() {
-    const now = new Date();
-    const tomorrow = new Date(now);
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
-    
-    const timeLeft = tomorrow - now;
-    const hours = Math.floor(timeLeft / (1000 * 60 * 60));
-    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-    
-    const timerElement = document.getElementById('daily-timer');
-    if (timerElement) {
-        timerElement.textContent = `${hours}h ${minutes}m left`;
-    }
+function updateDailyTimer () {
+  const now = new Date()
+  const tomorrow = new Date(now)
+  tomorrow.setDate(tomorrow.getDate() + 1)
+  tomorrow.setHours(0, 0, 0, 0)
+
+  const timeLeft = tomorrow - now
+  const hours = Math.floor(timeLeft / (1000 * 60 * 60))
+  const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60))
+
+  const timerElement = document.getElementById('daily-timer')
+  if (timerElement) {
+    timerElement.textContent = `${hours}h ${minutes}m left`
+  }
 }
 
 // Scroll to tournaments section
-window.scrollToTournaments = function() {
-    document.querySelector('.tournaments-section').scrollIntoView({ 
-        behavior: 'smooth',
-        block: 'start'
-    });
-};
+window.scrollToTournaments = function () {
+  document.querySelector('.tournaments-section').scrollIntoView({
+    behavior: 'smooth',
+    block: 'start'
+  })
+}
 
 // Placeholder functions for future features
-window.openLeaderboard = function() {
-    alert('Leaderboard feature coming soon in the next update!');
-};
+window.openLeaderboard = function () {
+  alert('Leaderboard feature coming soon in the next update!')
+}
 
-window.showPointsHistory = function() {
-    alert('Points history feature coming soon!');
-};
+window.showPointsHistory = function () {
+  alert('Points history feature coming soon!')
+}
 
 // Additional placeholder functions for HTML compatibility
-window.logout = function() {
-    disconnectWallet();
-};
+window.logout = function () {
+  disconnectWallet()
+}
 
-window.connectWithMetaMask = function() {
-    connectWallet();
-};
+window.connectWithMetaMask = function () {
+  connectWallet()
+}
 
-window.connectWithWalletConnect = function() {
-    showEmailLoginModal();
-};
+window.connectWithWalletConnect = function () {
+  showEmailLoginModal()
+}
 
-window.connectWithEmail = function() {
-    showEmailLoginModal();
-};
+window.connectWithEmail = function () {
+  showEmailLoginModal()
+}
 
-window.showLoginModal = function() {
-    showEmailLoginModal();
-};
+window.showLoginModal = function () {
+  showEmailLoginModal()
+}
 
-window.hideLoginModal = function() {
-    closeModal();
-};
+window.hideLoginModal = function () {
+  closeModal()
+}
 
-window.openFullLeaderboard = function() {
-    alert('Full leaderboard coming soon!');
-};
+window.openFullLeaderboard = function () {
+  alert('Full leaderboard coming soon!')
+}
 
 // Console log for debugging
-console.log('App.js loaded with backend integration');
-console.log('API Base URL:', API_BASE_URL);
+console.log('App.js loaded with backend integration')
+console.log('API Base URL:', API_BASE_URL)

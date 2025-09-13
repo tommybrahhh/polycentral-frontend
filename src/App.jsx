@@ -1,11 +1,87 @@
-import React from 'react';
-import ReactDOM from 'react-dom';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import './style.css';
+// Make sure your style.css is in the src folder
+import './style.css'; 
 
 // Main App Component
 const App = () => {
-  const [view, setView] = React.useState('events');
+  const [view, setView] = useState('events');
+  // State to store the user's wallet address
+  const [currentAccount, setCurrentAccount] = useState(null);
+
+  // This function checks if a wallet is connected when the app loads
+  const checkIfWalletIsConnected = async () => {
+    try {
+      // First make sure we have access to window.ethereum
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        console.log("Make sure you have MetaMask!");
+        return;
+      } else {
+        console.log("We have the ethereum object", ethereum);
+      }
+
+      // Check if we're authorized to access the user's wallet
+      const accounts = await ethereum.request({ method: 'eth_accounts' });
+
+      if (accounts.length !== 0) {
+        const account = accounts[0];
+        console.log("Found an authorized account:", account);
+        setCurrentAccount(account);
+      } else {
+        console.log("No authorized account found");
+      }
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // The main function to connect the wallet
+  const connectWallet = async () => {
+    try {
+      const { ethereum } = window;
+
+      if (!ethereum) {
+        alert("Get MetaMask!");
+        return;
+      }
+
+      // Request access to the user's accounts
+      const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
+
+      console.log("Connected", accounts[0]);
+      setCurrentAccount(accounts[0]);
+    } catch (error) {
+      console.log(error);
+    }
+  };
+  
+  // This runs our function when the page loads.
+  // It also sets up a listener for account changes.
+  useEffect(() => {
+    checkIfWalletIsConnected();
+
+    const handleAccountsChanged = (accounts) => {
+        if (accounts.length > 0) {
+            setCurrentAccount(accounts[0]);
+        } else {
+            setCurrentAccount(null);
+        }
+    };
+
+    if (window.ethereum) {
+        window.ethereum.on('accountsChanged', handleAccountsChanged);
+    }
+    
+    // Cleanup the listener when the component is unmounted
+    return () => {
+        if (window.ethereum) {
+            window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+        }
+    };
+  }, []);
+
 
   return (
     <div className="app-container">
@@ -16,6 +92,19 @@ const App = () => {
         <button onClick={() => setView('predictions')} className={view === 'predictions' ? 'active' : ''}>
           Predictions
         </button>
+        
+        {/* --- Wallet Button Logic --- */}
+        <div className="wallet-container">
+          {!currentAccount ? (
+            <button onClick={connectWallet} className="wallet-btn">
+              Connect Wallet
+            </button>
+          ) : (
+            <p className="wallet-address">
+              Connected: {`${currentAccount.substring(0, 6)}...${currentAccount.substring(currentAccount.length - 4)}`}
+            </p>
+          )}
+        </div>
       </nav>
 
       {view === 'events' ? <EventsInterface /> : <PredictionsInterface />}
@@ -23,7 +112,7 @@ const App = () => {
   );
 };
 
-// Events Interface Component
+// Events Interface Component (No changes needed here)
 const EventsInterface = () => {
   const [events, setEvents] = React.useState([]);
   const [showCreateModal, setShowCreateModal] = React.useState(false);
@@ -42,6 +131,8 @@ const EventsInterface = () => {
 
   const fetchEvents = async () => {
     try {
+      // IMPORTANT: You might need to provide the full URL in development
+      // e.g., axios.get('http://localhost:3001/api/events')
       const response = await axios.get('/api/events');
       setEvents(response.data);
     } catch (error) {
@@ -181,4 +272,9 @@ const PredictionsInterface = () => {
   );
 };
 
-ReactDOM.render(<App />, document.getElementById('root'));
+// This line is not needed in a Vite project's App.jsx,
+// but it doesn't hurt to leave it.
+// ReactDOM.render(<App />, document.getElementById('root'));
+
+// The important thing is to export the component
+export default App;

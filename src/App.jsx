@@ -6,8 +6,14 @@ import './style.css';
 // Main App Component
 const App = () => {
   const [view, setView] = useState('events');
-  // State to store the user's wallet address
   const [currentAccount, setCurrentAccount] = useState(null);
+  const [points, setPoints] = useState(0);
+  const [userEmail, setUserEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
+  const [emailVerified, setEmailVerified] = useState(false);
 
   // This function checks if a wallet is connected when the app loads
   const checkIfWalletIsConnected = async () => {
@@ -103,11 +109,31 @@ const App = () => {
             <p className="wallet-address">
               Connected: {`${currentAccount.substring(0, 6)}...${currentAccount.substring(currentAccount.length - 4)}`}
             </p>
-          )}
-        </div>
-      </nav>
+         )}
+         <div className="points-display">
+           🪙 {points} Points
+           <button
+             className="claim-btn"
+             onClick={async () => {
+               try {
+                 const response = await axios.post('/api/user/claim-free-points', {}, {
+                   headers: { Authorization: `Bearer ${localStorage.getItem('auth_token')}` }
+                 });
+                 setPoints(p => p + response.data.points);
+               } catch (error) {
+                 console.error('Claim failed:', error);
+                 alert('Failed to claim points: ' + (error.response?.data?.message || error.message));
+               }
+             }}
+             title="Claim daily points"
+           >
+             + Claim
+           </button>
+         </div>
+       </div>
+     </nav>
 
-      {view === 'events' ? <EventsInterface /> : <PredictionsInterface />}
+     {view === 'events' ? <EventsInterface /> : <PredictionsInterface />}
     </div>
   );
 };

@@ -1,30 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react'; // Cleaned up import
 import axios from 'axios';
 // Make sure your style.css is in the src folder
 import './style.css'; 
 
 // Main App Component
 const App = () => {
-  const [view, setView] = useState('events');
-  // State to store the user's wallet address
-  const [currentAccount, setCurrentAccount] = useState(null);
+  const [view, setView] = useState('events'); // Using useState directly
+  const [currentAccount, setCurrentAccount] = useState(null); // Using useState directly
 
-  // This function checks if a wallet is connected when the app loads
   const checkIfWalletIsConnected = async () => {
     try {
-      // First make sure we have access to window.ethereum
       const { ethereum } = window;
-
       if (!ethereum) {
         console.log("Make sure you have MetaMask!");
         return;
-      } else {
-        console.log("We have the ethereum object", ethereum);
       }
-
-      // Check if we're authorized to access the user's wallet
       const accounts = await ethereum.request({ method: 'eth_accounts' });
-
       if (accounts.length !== 0) {
         const account = accounts[0];
         console.log("Found an authorized account:", account);
@@ -37,19 +28,14 @@ const App = () => {
     }
   };
 
-  // The main function to connect the wallet
   const connectWallet = async () => {
     try {
       const { ethereum } = window;
-
       if (!ethereum) {
         alert("Get MetaMask!");
         return;
       }
-
-      // Request access to the user's accounts
       const accounts = await ethereum.request({ method: 'eth_requestAccounts' });
-
       console.log("Connected", accounts[0]);
       setCurrentAccount(accounts[0]);
     } catch (error) {
@@ -57,11 +43,8 @@ const App = () => {
     }
   };
   
-  // This runs our function when the page loads.
-  // It also sets up a listener for account changes.
   useEffect(() => {
     checkIfWalletIsConnected();
-
     const handleAccountsChanged = (accounts) => {
         if (accounts.length > 0) {
             setCurrentAccount(accounts[0]);
@@ -69,19 +52,15 @@ const App = () => {
             setCurrentAccount(null);
         }
     };
-
     if (window.ethereum) {
         window.ethereum.on('accountsChanged', handleAccountsChanged);
     }
-    
-    // Cleanup the listener when the component is unmounted
     return () => {
         if (window.ethereum) {
             window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
         }
     };
   }, []);
-
 
   return (
     <div className="app-container">
@@ -92,8 +71,6 @@ const App = () => {
         <button onClick={() => setView('predictions')} className={view === 'predictions' ? 'active' : ''}>
           Predictions
         </button>
-        
-        {/* --- Wallet Button Logic --- */}
         <div className="wallet-container">
           {!currentAccount ? (
             <button onClick={connectWallet} className="wallet-btn">
@@ -106,17 +83,19 @@ const App = () => {
           )}
         </div>
       </nav>
-
       {view === 'events' ? <EventsInterface /> : <PredictionsInterface />}
     </div>
   );
 };
 
-// Events Interface Component (No changes needed here)
+// Events Interface Component
 const EventsInterface = () => {
-  const [events, setEvents] = React.useState([]);
-  const [showCreateModal, setShowCreateModal] = React.useState(false);
-  const [newEvent, setNewEvent] = React.useState({
+  // CORRECT: Define API_URL once for the entire component
+  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+
+  const [events, setEvents] = useState([]);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newEvent, setNewEvent] = useState({
     title: '',
     description: '',
     location: '',
@@ -125,27 +104,28 @@ const EventsInterface = () => {
     capacity: 100
   });
 
-  React.useEffect(() => {
-    fetchEvents();
-  }, []);
-
   const fetchEvents = async () => {
     try {
-      // IMPORTANT: You might need to provide the full URL in development
-      // e.g., axios.get('http://localhost:3001/api/events')
-      const response = await axios.get('/api/events');
+      // CORRECT: Uses the API_URL constant
+      const response = await axios.get(`${API_URL}/api/events`);
       setEvents(response.data);
     } catch (error) {
       console.error('Error fetching events:', error);
     }
   };
 
+  // Run fetchEvents when the component loads
+  useEffect(() => {
+    fetchEvents();
+  }, []);
+
   const handleCreateEvent = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/events', newEvent);
+      // FIXED: Now uses the API_URL constant
+      await axios.post(`${API_URL}/api/events`, newEvent);
       setShowCreateModal(false);
-      fetchEvents();
+      fetchEvents(); // Refresh the list after creating a new event
     } catch (error) {
       console.error('Error creating event:', error);
     }
@@ -173,14 +153,12 @@ const EventsInterface = () => {
                   onChange={(e) => setNewEvent({...newEvent, title: e.target.value})}
                 />
               </div>
-              
               <div className="form-group">
                 <label>Description</label>
                 <textarea
                   onChange={(e) => setNewEvent({...newEvent, description: e.target.value})}
                 />
               </div>
-
               <div className="form-group">
                 <label>Location</label>
                 <input
@@ -189,7 +167,6 @@ const EventsInterface = () => {
                   onChange={(e) => setNewEvent({...newEvent, location: e.target.value})}
                 />
               </div>
-
               <div className="form-row">
                 <div className="form-group">
                   <label>Start Time</label>
@@ -199,7 +176,6 @@ const EventsInterface = () => {
                     onChange={(e) => setNewEvent({...newEvent, start_time: e.target.value})}
                   />
                 </div>
-
                 <div className="form-group">
                   <label>End Time</label>
                   <input
@@ -209,17 +185,15 @@ const EventsInterface = () => {
                   />
                 </div>
               </div>
-
               <div className="form-group">
                 <label>Capacity</label>
                 <input
                   type="number"
                   min="1"
                   value={newEvent.capacity}
-                  onChange={(e) => setNewEvent({...newEvent, capacity: e.target.value})}
+                  onChange={(e) => setNewEvent({...newEvent, capacity: parseInt(e.target.value, 10)})}
                 />
               </div>
-
               <div className="modal-actions">
                 <button type="button" onClick={() => setShowCreateModal(false)}>
                   Cancel
@@ -242,18 +216,9 @@ const EventsInterface = () => {
             </div>
             <p className="description">{event.description}</p>
             <div className="event-details">
-              <div className="detail">
-                <span className="icon">📍</span>
-                {event.location}
-              </div>
-              <div className="detail">
-                <span className="icon">⏰</span>
-                {new Date(event.start_time).toLocaleDateString()} - {new Date(event.end_time).toLocaleDateString()}
-              </div>
-              <div className="detail">
-                <span className="icon">🕒</span>
-                {new Date(event.start_time).toLocaleTimeString()} to {new Date(event.end_time).toLocaleTimeString()}
-              </div>
+              <div className="detail"><span className="icon">📍</span> {event.location}</div>
+              <div className="detail"><span className="icon">⏰</span> {new Date(event.start_time).toLocaleDateString()} - {new Date(event.end_time).toLocaleDateString()}</div>
+              <div className="detail"><span className="icon">🕒</span> {new Date(event.start_time).toLocaleTimeString()} to {new Date(event.end_time).toLocaleTimeString()}</div>
             </div>
           </div>
         ))}
@@ -271,10 +236,6 @@ const PredictionsInterface = () => {
     </div>
   );
 };
-
-// This line is not needed in a Vite project's App.jsx,
-// but it doesn't hurt to leave it.
-// ReactDOM.render(<App />, document.getElementById('root'));
 
 // The important thing is to export the component
 export default App;
